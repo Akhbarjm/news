@@ -63,7 +63,8 @@ async def is_member(bot, user_id):
     try:
         member = await bot.get_chat_member(CHECK_CHANNEL, user_id)
         return member.status in ["member", "administrator", "creator"]
-    except:
+    except Exception as e:
+        log_action(user_id, f"Error in is_member: {str(e)}")
         return False
 
 def get_main_keyboard(admin):
@@ -98,6 +99,7 @@ async def start_command(message: types.Message):
 
 async def handle_message(message: types.Message):
     admin = get_admin(message.from_user.id)
+    log_action(message.from_user.id, f"Received message: {message.text}")  # لاگ اضافه شده
     if not admin or not await is_member(message.bot, message.from_user.id):
         return
     
@@ -106,8 +108,14 @@ async def handle_message(message: types.Message):
 
     # ثبت مستر ادمین اولیه
     if not get_all_admins() and message.from_user.id == MASTER_ADMIN_ID and text == MASTER_PASSWORD:
-        add_admin(message.from_user.id, "master_admin")
-        await message.reply(MENU_TEXTS[lang]["master_success"], reply_markup=get_main_keyboard(admin))
+        try:
+            add_admin(message.from_user.id, "master_admin")
+            admin = get_admin(message.from_user.id)  # بعد از ثبت دوباره بگیر
+            log_action(message.from_user.id, "Master admin registered")
+            await message.reply(MENU_TEXTS[lang]["master_success"], reply_markup=get_main_keyboard(admin))
+        except Exception as e:
+            log_action(message.from_user.id, f"Error registering master admin: {str(e)}")
+            await message.reply(f"خطا در ثبت: {str(e)}")
         return
 
     # منوی اصلی
