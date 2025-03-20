@@ -13,7 +13,7 @@ async def keep_alive():
         await asyncio.sleep(300)  # هر ۵ دقیقه یه بار برای جلوگیری از خوابیدن
 
 async def on_startup(_):
-    init_db()
+    init_db()  # دیتابیس رو راه‌اندازی می‌کنه
     asyncio.create_task(monitor_channels(bot))
     asyncio.create_task(backup_task(bot))
     asyncio.create_task(keep_alive())  # برای Render اضافه شده
