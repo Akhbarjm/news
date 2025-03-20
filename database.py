@@ -162,7 +162,7 @@ def get_last_update(channel_id):
 
 def update_last_update(channel_id, update_id):
     conn = sqlite3.connect("bot_database.db")
-    c = conn.cursor()1
+    c = conn.cursor()
     c.execute("INSERT OR REPLACE INTO updates (channel_id, last_update_id) VALUES (?, ?)", 
               (channel_id, update_id))
     conn.commit()
@@ -170,6 +170,7 @@ def update_last_update(channel_id, update_id):
 
 def get_backup():
     conn = sqlite3.connect("bot_database.db")
+    c = conn.cursor()  # این خط درسته و هیچ "1" اضافی نداره
     with open("backup.db", "wb") as f:
         for line in conn.iterdump():
             f.write(f"{line}\n".encode("utf-8"))
