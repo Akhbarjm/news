@@ -1,7 +1,5 @@
-# handlers.py
 from aiogram import Dispatcher, types
 from config import MASTER_ADMIN_ID, MASTER_PASSWORD
-from database import init_db, add_admin, get_admin, get_all_admins, log_action
 
 MENU_TEXTS = {
     "fa": {
@@ -9,9 +7,18 @@ MENU_TEXTS = {
         "welcome": "خوش اومدی! لطفاً از منو انتخاب کن:",
         "master_init": "لطفاً کلمه رمز رو بفرست تا مستر ادمین ثبت بشی:",
         "master_success": "شما به عنوان مستر ادمین ثبت شدید!",
-        "not_admin": "شما ادمین نیستید!"
+        "not_admin": "شما ادمین نیستید!",
+        "channels_list": "لیست کانال‌ها خالیه! یه کانال اضافه کن.",
+        "add_channel": "لطفاً آیدی کانال رو بفرست (مثل @ChannelName):",
+        "channel_added": "کانال با موفقیت اضافه شد!",
+        "settings": "تنظیمات فعلاً خالیه!",
+        "translate_prompt": "متن رو بفرست تا ترجمه کنم (به انگلیسی):",
+        "stop_bot": "ربات متوقف شد! برای شروع دوباره /start بزن.",
+        "stats": "آمار: هنوز چیزی نداریم!"
     }
 }
+
+channels = []  # لیست کانال‌ها رو اینجا نگه می‌داریم
 
 def get_main_keyboard():
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
@@ -20,35 +27,53 @@ def get_main_keyboard():
     return keyboard
 
 async def start_command(message: types.Message):
-    admin = get_admin(message.from_user.id)
-    if not admin and message.from_user.id == MASTER_ADMIN_ID and not get_all_admins():
+    if message.from_user.id == MASTER_ADMIN_ID:
         await message.reply(MENU_TEXTS["fa"]["master_init"])
-        log_action(message.from_user.id, "Master init requested")
-        return
-    if not admin:
+        print(f"Master init requested by {message.from_user.id}")
+    else:
         await message.reply(MENU_TEXTS["fa"]["not_admin"])
-        return
-    await message.reply(MENU_TEXTS["fa"]["welcome"], reply_markup=get_main_keyboard())
 
 async def handle_message(message: types.Message):
     text = message.text
-    log_action(message.from_user.id, f"Received: {text}")  # لاگ برای دیباگ
-    admin = get_admin(message.from_user.id)
+    print(f"Received: {text} from {message.from_user.id}")
 
-    if not admin and message.from_user.id == MASTER_ADMIN_ID and text == MASTER_PASSWORD:
-        try:
-            add_admin(message.from_user.id, "master_admin")
-            log_action(message.from_user.id, "Master admin registered")
-            await message.reply(MENU_TEXTS["fa"]["master_success"], reply_markup=get_main_keyboard())
-        except Exception as e:
-            log_action(message.from_user.id, f"Error registering master: {str(e)}")
-            await message.reply(f"خطا: {str(e)}")
+    # ثبت مستر ادمین
+    if message.from_user.id == MASTER_ADMIN_ID and text == MASTER_PASSWORD:
+        await message.reply(MENU_TEXTS["fa"]["master_success"], reply_markup=get_main_keyboard())
+        print(f"Master admin registered: {message.from_user.id}")
         return
 
-    if admin:
-        await message.reply(f"پیامت دریافت شد: {text}", reply_markup=get_main_keyboard())
-    else:
+    # فقط مستر ادمین می‌تونه ادامه بده
+    if message.from_user.id != MASTER_ADMIN_ID:
         await message.reply(MENU_TEXTS["fa"]["not_admin"])
+        return
+
+    # منوها
+    if text == "لیست کانال‌ها":
+        if not channels:
+            await message.reply(MENU_TEXTS["fa"]["channels_list"])
+        else:
+            await message.reply("لیست کانال‌ها:\n" + "\n".join(channels))
+    elif text == "اضافه کردن کانال":
+        await message.reply(MENU_TEXTS["fa"]["add_channel"])
+    elif text.startswith("@"):
+        channels.append(text)
+        await message.reply(MENU_TEXTS["fa"]["channel_added"], reply_markup=get_main_keyboard())
+    elif text == "تنظیمات":
+        await message.reply(MENU_TEXTS["fa"]["settings"], reply_markup=get_main_keyboard())
+    elif text == "ترجمه متن":
+        await message.reply(MENU_TEXTS["fa"]["translate_prompt"])
+    elif text == "توقف ربات":
+        await message.reply(MENU_TEXTS["fa"]["stop_bot"])
+        print("Bot stopped by user")
+        raise SystemExit  # ربات رو متوقف می‌کنه
+    elif text == "آمار":
+        await message.reply(MENU_TEXTS["fa"]["stats"], reply_markup=get_main_keyboard())
+    elif "ترجمه متن" in message.reply_to_message.text if message.reply_to_message else False:
+        # ترجمه ساده (بدون googletrans که پیچیده نشه)
+        await message.reply(f"ترجمه (تستی): {text} -> {text} (انگلیسی)", reply_markup=get_main_keyboard())
+    else:
+        await message.reply(f"پیامت: {text}", reply_markup=get_main_keyboard())
 
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(start_command, commands=["start"])
