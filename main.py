@@ -2,7 +2,7 @@
 from aiogram import Bot, Dispatcher, executor
 from config import BOT_TOKEN
 from database import init_db
-from handlers import register_handlers, monitor_channels, backup_task
+from handlers import register_handlers  # فقط register_handlers رو نگه می‌داریم
 import asyncio
 
 bot = Bot(token=BOT_TOKEN)
@@ -14,9 +14,7 @@ async def keep_alive():
 
 async def on_startup(_):
     init_db()  # دیتابیس رو راه‌اندازی می‌کنه
-    asyncio.create_task(monitor_channels(bot))
-    asyncio.create_task(backup_task(bot))
-    asyncio.create_task(keep_alive())
+    asyncio.create_task(keep_alive())  # فقط keep_alive رو نگه می‌داریم
 
 if __name__ == "__main__":
     register_handlers(dp)
