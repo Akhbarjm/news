@@ -1,6 +1,7 @@
 import sqlite3
 import logging
 
+# تنظیم لاگ
 logging.basicConfig(filename="bot.log", level=logging.INFO, format="%(asctime)s - %(message)s")
 
 def init_db():
