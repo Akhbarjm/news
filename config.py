@@ -4,11 +4,15 @@ import os
 load_dotenv()
 
 # تنظیمات API تلگرام
-API_ID = int(os.getenv("API_ID", "29508917"))  # API ID خودت رو اینجا بذار
-API_HASH = os.getenv("API_HASH", "9c9e774366cc70624fb44bedcb935ed7")  # API Hash خودت رو اینجا بذار
-PHONE = os.getenv("PHONE", "+989190289740")  # شماره تلفن خودت رو اینجا بذار
-CREATOR_ID = int(os.getenv("CREATOR_ID", "6704680236"))  # آیدی عددی سازنده
-MASTER_PASSWORD = os.getenv("MASTER_PASSWORD", "یاعلی")  # رمز سازنده
+API_ID = int(os.getenv("API_ID") or 0)  # اگر API_ID توی .env نباشه، 0 می‌ذاره
+API_HASH = os.getenv("API_HASH") or ""  # اگر API_HASH توی .env نباشه، خالی می‌ذاره
+PHONE = os.getenv("PHONE") or ""  # اگر PHONE توی .env نباشه، خالی می‌ذاره
+CREATOR_ID = int(os.getenv("CREATOR_ID") or 0)  # اگر CREATOR_ID توی .env نباشه، 0 می‌ذاره
+MASTER_PASSWORD = os.getenv("MASTER_PASSWORD") or ""  # اگر MASTER_PASSWORD توی .env نباشه، خالی می‌ذاره
+
+# بررسی مقادیر ضروری
+if not API_ID or not API_HASH or not PHONE or not CREATOR_ID or not MASTER_PASSWORD:
+    raise ValueError("لطفاً مقادیر API_ID، API_HASH، PHONE، CREATOR_ID و MASTER_PASSWORD رو توی فایل .env وارد کنید!")
 
 # متغیرهای گلوبال
 USER_STATES = {}  # دیکشنری برای ذخیره وضعیت کاربران
